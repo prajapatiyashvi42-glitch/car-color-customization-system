@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 56px);">
+    {% include 'admin/sidebar.html' %}
+    <div class="flex-grow-1 p-4 bg-light">
+        <h4 class="fw-bold mb-4">{% if car_model %}Edit Car Model{% else %}Add Car Model{% endif %}</h4>
+        <div class="card border-0 shadow-sm p-4" style="max-width:600px;">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Brand</label>
+                        <select name="brand_id" class="form-select" required>
+                            <option value="">Select brand</option>
+                            {% for b in brands %}
+                            <option value="{{ b.brand_id }}"
+                                {% if car_model and car_model.brand.brand_id == b.brand_id %}selected{% endif %}>
+                                {{ b.brand_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Model Name</label>
+                        <input type="text" name="model_name" class="form-control"
+                               value="{% if car_model %}{{ car_model.model_name }}{% endif %}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Base Color</label>
+                        <input type="text" name="base_color" class="form-control"
+                               value="{% if car_model %}{{ car_model.base_color }}{% endif %}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Price (₹)</label>
+                        <input type="number" name="price" step="0.01" min="0" class="form-control"
+                               value="{% if car_model %}{{ car_model.price }}{% else %}0{% endif %}" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Preview Image</label>
+                        {% if car_model and car_model.preview_image %}
+                        <div class="mb-2">
+                            <img src="{{ car_model.preview_image.url }}" style="height:80px;border-radius:6px;">
+                        </div>
+                        {% endif %}
+                        <input type="file" name="preview_image" class="form-control" accept="image/*">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-danger">{% if car_model %}Save Changes{% else %}Create Model{% endif %}</button>
+                    <a href="{% url 'admin_car_models' %}" class="btn btn-secondary ms-2">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

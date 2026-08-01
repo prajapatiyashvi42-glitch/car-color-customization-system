@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 56px);">
+    {% include 'admin/sidebar.html' %}
+    <div class="flex-grow-1 p-4 bg-light">
+        <h4 class="fw-bold mb-4">{% if brand %}Edit Brand{% else %}Add Brand{% endif %}</h4>
+        <div class="card border-0 shadow-sm p-4" style="max-width:480px;">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Brand Name</label>
+                    <input type="text" name="brand_name" class="form-control"
+                           value="{% if brand %}{{ brand.brand_name }}{% endif %}" required>
+                </div>
+                <button type="submit" class="btn btn-danger">{% if brand %}Save Changes{% else %}Create Brand{% endif %}</button>
+                <a href="{% url 'admin_brands' %}" class="btn btn-secondary ms-2">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

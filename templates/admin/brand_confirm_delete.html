@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 56px);">
+    {% include 'admin/sidebar.html' %}
+    <div class="flex-grow-1 p-4 bg-light d-flex align-items-start">
+        <div class="card border-0 shadow-sm p-4 mt-4" style="max-width:480px;">
+            <h5 class="fw-bold text-danger mb-3">⚠️ Delete Brand</h5>
+            <p>Are you sure you want to delete <strong>{{ brand.brand_name }}</strong>?<br>
+            <small class="text-muted">This will also delete all linked car models and colors.</small></p>
+            <form method="POST" class="d-flex gap-2 mt-3">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                <a href="{% url 'admin_brands' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

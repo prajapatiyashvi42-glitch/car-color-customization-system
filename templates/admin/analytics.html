@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 56px);">
+    {% include 'admin/sidebar.html' %}
+
+    <div class="flex-grow-1 p-4" style="background:#f4f6f9;">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold mb-0">📊 Analytics Dashboard</h4>
+                <small class="text-muted">Live data from the database</small>
+            </div>
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-secondary">← Back to Dashboard</a>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 h-100" style="border-top:4px solid #dc3545 !important;">
+                    <div style="font-size:28px;">📦</div>
+                    <p class="display-6 fw-bold mb-0 text-danger">{{ total_orders }}</p>
+                    <small class="text-muted">Total Orders</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 h-100" style="border-top:4px solid #198754 !important;">
+                    <div style="font-size:28px;">🔧</div>
+                    <p class="display-6 fw-bold mb-0 text-success">{{ total_bookings }}</p>
+                    <small class="text-muted">Total Bookings</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 h-100" style="border-top:4px solid #0d6efd !important;">
+                    <div style="font-size:28px;">👥</div>
+                    <p class="display-6 fw-bold mb-0 text-primary">{{ total_customers }}</p>
+                    <small class="text-muted">Customers</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 h-100" style="border-top:4px solid #fd7e14 !important;">
+                    <div style="font-size:28px;">💰</div>
+                    <p class="display-6 fw-bold mb-0 text-warning">₹{{ total_revenue }}</p>
+                    <small class="text-muted">Total Revenue</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 1: Bar (orders/brand) + Pie (color popularity) -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-7">
+                <div class="card border-0 shadow-sm p-4 h-100">
+                    <h6 class="fw-bold mb-3">🏷️ Orders per Brand</h6>
+                    <div style="position:relative;height:280px;">
+                        <canvas id="brandBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm p-4 h-100">
+                    <h6 class="fw-bold mb-3">🎨 Color Popularity</h6>
+                    <div style="position:relative;height:280px;">
+                        <canvas id="colorPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Line (bookings/month) + Doughnut (order status) -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-7">
+                <div class="card border-0 shadow-sm p-4 h-100">
+                    <h6 class="fw-bold mb-3">📅 Bookings per Month</h6>
+                    <div style="position:relative;height:280px;">
+                        <canvas id="bookingLineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm p-4 h-100">
+                    <h6 class="fw-bold mb-3">📋 Order Status Breakdown</h6>
+                    <div style="position:relative;height:280px;">
+                        <canvas id="statusDoughnutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Bar (revenue/brand) + Line (customer registrations) -->
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm p-4 h-100">
+                    <h6 class="fw-bold mb-3">💰 Revenue per Brand (₹)</h6>
+                    <div style="position:relative;height:260px;">
+                        <canvas id="revenueBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm p-4 h-100">
+                    <h6 class="fw-bold mb-3">👥 Customer Registrations per Month</h6>
+                    <div style="position:relative;height:260px;">
+                        <canvas id="regLineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /flex-grow-1 -->
+</div><!-- /d-flex -->
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── Data from Django ─────────────────────────────────────────────────
+const brandLabels   = {{ brand_labels|safe }};
+const brandData     = {{ brand_data|safe }};
+const colorLabels   = {{ color_labels|safe }};
+const colorData     = {{ color_data|safe }};
+const colorCodes    = {{ color_codes|safe }};
+const bookingLabels = {{ booking_labels|safe }};
+const bookingData   = {{ booking_data|safe }};
+const statusLabels  = {{ status_labels|safe }};
+const statusData    = {{ status_data|safe }};
+const revenueLabels = {{ revenue_labels|safe }};
+const revenueData   = {{ revenue_data|safe }};
+const regLabels     = {{ reg_labels|safe }};
+const regData       = {{ reg_data|safe }};
+
+// ── Shared defaults ──────────────────────────────────────────────────
+Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+Chart.defaults.font.size   = 13;
+Chart.defaults.color       = '#555';
+
+const STATUS_COLORS = [
+    '#dc3545','#198754','#0d6efd','#fd7e14','#6f42c1','#20c997','#ffc107'
+];
+
+// ── 1. Bar — Orders per Brand ────────────────────────────────────────
+new Chart(document.getElementById('brandBarChart'), {
+    type: 'bar',
+    data: {
+        labels: brandLabels,
+        datasets: [{
+            label: 'Orders',
+            data: brandData,
+            backgroundColor: brandLabels.map((_, i) =>
+                ['#dc3545','#fd7e14','#ffc107','#198754','#0d6efd','#6f42c1','#20c997'][i % 7]
+            ),
+            borderRadius: 6,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#eee' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// ── 2. Pie — Color Popularity ────────────────────────────────────────
+new Chart(document.getElementById('colorPieChart'), {
+    type: 'pie',
+    data: {
+        labels: colorLabels,
+        datasets: [{
+            data: colorData,
+            backgroundColor: colorCodes,
+            borderColor: '#fff',
+            borderWidth: 2,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'right', labels: { boxWidth: 14, padding: 12 } }
+        }
+    }
+});
+
+// ── 3. Line — Bookings per Month ─────────────────────────────────────
+new Chart(document.getElementById('bookingLineChart'), {
+    type: 'line',
+    data: {
+        labels: bookingLabels,
+        datasets: [{
+            label: 'Bookings',
+            data: bookingData,
+            borderColor: '#198754',
+            backgroundColor: 'rgba(25,135,84,0.1)',
+            pointBackgroundColor: '#198754',
+            pointRadius: 5,
+            tension: 0.4,
+            fill: true,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#eee' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// ── 4. Doughnut — Order Status ───────────────────────────────────────
+new Chart(document.getElementById('statusDoughnutChart'), {
+    type: 'doughnut',
+    data: {
+        labels: statusLabels,
+        datasets: [{
+            data: statusData,
+            backgroundColor: STATUS_COLORS,
+            borderColor: '#fff',
+            borderWidth: 2,
+            hoverOffset: 8,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+            legend: { position: 'right', labels: { boxWidth: 14, padding: 12 } }
+        }
+    }
+});
+
+// ── 5. Bar — Revenue per Brand ───────────────────────────────────────
+new Chart(document.getElementById('revenueBarChart'), {
+    type: 'bar',
+    data: {
+        labels: revenueLabels,
+        datasets: [{
+            label: 'Revenue (₹)',
+            data: revenueData,
+            backgroundColor: 'rgba(253,126,20,0.8)',
+            borderColor: '#fd7e14',
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: '#eee' },
+                ticks: { callback: v => '₹' + v.toLocaleString('en-IN') }
+            },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// ── 6. Line — Customer Registrations ────────────────────────────────
+new Chart(document.getElementById('regLineChart'), {
+    type: 'line',
+    data: {
+        labels: regLabels,
+        datasets: [{
+            label: 'New Customers',
+            data: regData,
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13,110,253,0.1)',
+            pointBackgroundColor: '#0d6efd',
+            pointRadius: 5,
+            tension: 0.4,
+            fill: true,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#eee' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endblock %}

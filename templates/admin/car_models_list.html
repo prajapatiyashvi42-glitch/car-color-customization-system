@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 56px);">
+    {% include 'admin/sidebar.html' %}
+    <div class="flex-grow-1 p-4 bg-light">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold mb-0">🚘 Car Models</h4>
+            <a href="{% url 'admin_car_model_add' %}" class="btn btn-danger btn-sm">+ Add Model</a>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr><th>#</th><th>Image</th><th>Brand</th><th>Model</th><th>Base Color</th><th>Price</th><th class="text-end">Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for m in car_models %}
+                        <tr>
+                            <td class="text-muted">{{ m.model_id }}</td>
+                            <td>
+                                {% if m.preview_image %}
+                                <img src="{{ m.preview_image.url }}" style="height:48px;width:72px;object-fit:contain;border-radius:4px;background:#f4f6f9;padding:2px;">
+                                {% else %}
+                                <span style="font-size:24px;">🚗</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ m.brand.brand_name }}</td>
+                            <td class="fw-semibold">{{ m.model_name }}</td>
+                            <td>{{ m.base_color }}</td>
+                            <td>₹{{ m.price }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'admin_car_model_edit' m.model_id %}" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+                                <a href="{% url 'admin_car_model_delete' m.model_id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="text-center text-muted py-4">No car models yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
